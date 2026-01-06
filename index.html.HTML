@@ -1,0 +1,2641 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Manajemen Lab </title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    <style>
+        /* CSS TETAP SAMA PERSIS SEBELUMNYA */
+        :root {
+            --primary: #ff6b9d;
+            --primary-light: #ff9ac2;
+            --primary-dark: #e84393;
+            --secondary: #a87fa1;
+            --light: #fff5f9;
+            --dark: #5a4b5a;
+            --success: #7bd0a0;
+            --danger: #ff8a80;
+            --warning: #ffd166;
+            --info: #6bd3ff;
+            --pastel-pink: #ffcce6;
+            --pastel-blue: #b3e0ff;
+            --pastel-green: #b8e0c7;
+            --pastel-red: #ffb3b3;
+            --pastel-yellow: #fff0b3;
+            --pastel-bg: #fff9fb;
+            --text-dark: #5a4b5a;
+            --btn-hover: #ff9ac2;
+            --sidebar-bg: linear-gradient(180deg, #ff6b9d, #d36ba7);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --modal-bg: #fff9fb;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--pastel-bg), #ffe6f2);
+            color: var(--text-dark);
+            overflow-x: hidden;
+        }
+
+        /* ===== LOGIN PAGE ===== */
+        #login-page {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--pastel-pink), var(--pastel-blue));
+            animation: gradientShift 15s ease infinite;
+            background-size: 200% 200%;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .login-container {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px;
+            width: 400px;
+            max-width: 90%;
+            box-shadow: 0 15px 35px rgba(255, 107, 157, 0.2);
+            border: 2px solid rgba(255, 107, 157, 0.1);
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .login-container:hover {
+            transform: translateY(-5px);
+        }
+
+        .login-logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-logo i {
+            font-size: 3.5rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .login-logo h1 {
+            color: var(--primary);
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+
+        .login-form .form-group {
+            margin-bottom: 20px;
+        }
+
+        .login-form label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        .login-form input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid var(--pastel-pink);
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .login-form input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.2);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .login-btn:hover {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 157, 0.4);
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 20px;
+            color: var(--text-dark);
+            font-size: 0.9rem;
+        }
+
+        /* ===== MAIN APP ===== */
+        .main-app {
+            display: none;
+            width: 100%;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: var(--sidebar-bg);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            height: 100%;
+            z-index: 1000;
+            box-shadow: 5px 0 20px rgba(255, 107, 157, 0.2);
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            padding: 25px 0;
+            background-color: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .sidebar h2 i {
+            color: var(--pastel-yellow);
+        }
+
+        .sidebar nav {
+            flex: 1;
+            padding: 20px 0;
+        }
+
+        .sidebar nav ul {
+            list-style: none;
+        }
+
+        .sidebar nav li {
+            margin-bottom: 5px;
+        }
+
+        .sidebar nav a {
+            padding: 15px 25px;
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            display: block;
+            transition: all 0.3s;
+            border-left: 4px solid transparent;
+            font-weight: 500;
+        }
+
+        .sidebar nav a:hover {
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.2), transparent);
+            color: white;
+            border-left: 4px solid var(--pastel-yellow);
+            padding-left: 30px;
+        }
+
+        .sidebar nav a.active {
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.3), transparent);
+            color: white;
+            border-left: 4px solid var(--pastel-yellow);
+            font-weight: 600;
+        }
+
+        .sidebar nav a i {
+            margin-right: 15px;
+            width: 20px;
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .sidebar-footer {
+            padding: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 12px;
+        }
+
+        .user-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--pastel-yellow), var(--pastel-pink));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--primary-dark);
+            font-size: 1.2rem;
+        }
+
+        .main-content {
+            margin-left: 250px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .header {
+            background: linear-gradient(135deg, white, var(--pastel-bg));
+            padding: 20px 40px;
+            box-shadow: 0 4px 20px rgba(255, 107, 157, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            border-bottom: 2px solid var(--pastel-pink);
+        }
+
+        .header h1 {
+            font-size: 1.6rem;
+            color: var(--primary-dark);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .dashboard-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .dashboard-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 8px 25px rgba(255, 107, 157, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 2px solid transparent;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dashboard-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(255, 107, 157, 0.2);
+            border-color: var(--pastel-pink);
+        }
+
+        .dashboard-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+        }
+
+        .dashboard-card h3 {
+            font-size: 1rem;
+            color: var(--primary-dark);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dashboard-card .card-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 15px 0;
+        }
+
+        .card-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, var(--pastel-pink), white);
+            color: var(--primary);
+            font-size: 1.8rem;
+        }
+
+        .content-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .section-header h2 {
+            font-size: 2rem;
+            color: var(--primary-dark);
+            position: relative;
+            padding-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .section-header h2:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 70px;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary), var(--primary-light));
+            border-radius: 3px;
+        }
+
+        .table-container {
+            background: var(--card-bg);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(255, 107, 157, 0.1);
+            margin-bottom: 40px;
+            border: 2px solid var(--pastel-pink);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 18px 25px;
+            text-align: left;
+            border-bottom: 1px solid var(--pastel-pink);
+        }
+
+        th {
+            background: linear-gradient(135deg, var(--primary-light), var(--primary));
+            color: white;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:hover {
+            background: linear-gradient(90deg, rgba(255, 214, 230, 0.3), transparent);
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.95rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #5db985);
+            color: white;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger), #ff6b6b);
+            color: white;
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning), #ffb142);
+            color: var(--text-dark);
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, var(--info), #4dabf7);
+            color: white;
+        }
+
+        .btn-sm {
+            padding: 8px 15px;
+            font-size: 0.85rem;
+            gap: 6px;
+        }
+
+        .status {
+            padding: 6px 15px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-block;
+            border: 2px solid transparent;
+        }
+
+        .status-active, .status-available {
+            background: linear-gradient(135deg, rgba(123, 208, 160, 0.2), rgba(123, 208, 160, 0.1));
+            color: #2e8b57;
+            border-color: var(--success);
+        }
+
+        .status-inactive, .status-maintenance {
+            background: linear-gradient(135deg, rgba(255, 138, 128, 0.2), rgba(255, 138, 128, 0.1));
+            color: #c0392b;
+            border-color: var(--danger);
+        }
+
+        .status-borrowed {
+            background: linear-gradient(135deg, rgba(255, 209, 102, 0.2), rgba(255, 209, 102, 0.1));
+            color: #e67e22;
+            border-color: var(--warning);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(90, 75, 90, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            animation: modalBg 0.3s ease;
+        }
+
+        @keyframes modalBg {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--modal-bg);
+            border-radius: 20px;
+            width: 550px;
+            max-width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 25px 50px rgba(255, 107, 157, 0.3);
+            animation: modalSlideIn 0.4s ease;
+            border: 3px solid var(--pastel-pink);
+        }
+
+        @keyframes modalSlideIn {
+            from { opacity: 0; transform: translateY(-30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 25px;
+            border-bottom: 2px solid var(--pastel-pink);
+            background: linear-gradient(135deg, white, var(--pastel-bg));
+        }
+
+        .modal-header h3 {
+            color: var(--primary-dark);
+            font-size: 1.4rem;
+            font-weight: 600;
+        }
+
+        .close {
+            font-size: 1.8rem;
+            cursor: pointer;
+            color: var(--primary);
+            transition: all 0.3s;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+        }
+
+        .close:hover {
+            color: var(--primary-dark);
+            background: var(--pastel-pink);
+            transform: rotate(90deg);
+        }
+
+        .modal-body {
+            padding: 25px;
+        }
+
+        .modal-footer {
+            padding: 25px;
+            border-top: 2px solid var(--pastel-pink);
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+            flex-wrap: wrap;
+            background: linear-gradient(135deg, white, var(--pastel-bg));
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 0.95rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid var(--pastel-pink);
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.2);
+        }
+
+        @media (max-width: 992px) {
+            .sidebar {
+                width: 80px;
+            }
+            
+            .sidebar h2, .sidebar nav span, .user-info span, .sidebar-footer span {
+                display: none;
+            }
+            
+            .sidebar nav a {
+                padding: 15px 10px;
+                text-align: center;
+            }
+            
+            .sidebar nav a i {
+                margin-right: 0;
+                font-size: 1.3rem;
+            }
+            
+            .main-content {
+                margin-left: 80px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-cards {
+                grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            }
+            
+            .section-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 15px;
+            }
+            
+            .header {
+                padding: 15px 25px;
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .header h1 {
+                font-size: 1.4rem;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+            
+            th, td {
+                padding: 12px 15px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .dashboard-cards {
+                grid-template-columns: 1fr;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .modal-footer {
+                flex-direction: column;
+            }
+            
+            .modal-footer .btn {
+                width: 100%;
+            }
+        }
+
+        .content {
+            flex: 1;
+            padding: 40px;
+            background: transparent;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 20px 12px 45px;
+            border: 2px solid var(--pastel-pink);
+            border-radius: 10px;
+            font-size: 1rem;
+            background: white;
+            transition: all 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(255, 107, 157, 0.2);
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 10px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .badge-warning {
+            background: var(--warning);
+            color: var(--text-dark);
+        }
+
+        .clickable-row {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .clickable-row:hover {
+            background: linear-gradient(90deg, rgba(255, 214, 230, 0.5), transparent);
+            transform: scale(1.01);
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            background-color: #ffe6e6;
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: var(--primary);
+        }
+        
+        .loading i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--success);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 3000;
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .toast.error {
+            background: var(--danger);
+        }
+    </style>
+</head>
+<body>
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="toast"></div>
+
+    <!-- ===== LOGIN PAGE ===== -->
+    <div id="login-page">
+        <div class="login-container">
+            <div class="login-logo">
+                <i class="fas fa-laptop-code"></i>
+                <h1>Sistem Manajemen Lab</h1>
+                <p style="color: var(--text-dark); margin-top: 5px;">Silakan login untuk melanjutkan</p>
+            </div>
+            
+            <form class="login-form" id="loginForm">
+                <div class="form-group">
+                    <label for="email"><i class="fas fa-envelope"></i> Email</label>
+                    <input type="email" id="email" placeholder="Masukkan email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password"><i class="fas fa-lock"></i> Password</label>
+                    <input type="password" id="password" placeholder="Masukkan password" required>
+                </div>
+                
+                <div id="loginError" class="error-message">
+                    Email atau password salah!
+                </div>
+                
+                <button type="submit" class="login-btn">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+                
+                <div class="login-footer">
+                    <p>Gunakan email dan password yang terdaftar</p>
+                    <p style="margin-top: 10px; color: var(--primary);">© 2024 Lab Management System</p>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MAIN APPLICATION ===== -->
+    <div class="main-app">
+        <!-- Sidebar Navigation -->
+        <div class="sidebar">
+            <h2><i class="fas fa-laptop-code"></i> Lab Manager</h2>
+            
+            <nav>
+                <ul>
+                    <li><a href="#" class="active" data-section="dashboard"><i class="fas fa-tachometer-alt"></i> <span>Dashboard</span></a></li>
+                    <li><a href="#" data-section="devices"><i class="fas fa-desktop"></i> <span>Perangkat</span></a></li>
+                    <li><a href="#" data-section="users"><i class="fas fa-users"></i> <span>Pengguna</span></a></li>
+                    <li><a href="#" data-section="borrowings"><i class="fas fa-laptop"></i> <span>Peminjaman</span></a></li>
+                    <li><a href="#" data-section="admin"><i class="fas fa-user-cog"></i> <span>Admin Lab</span></a></li>
+                    <li><a href="#" data-section="reports"><i class="fas fa-chart-bar"></i> <span>Laporan</span></a></li>
+                </ul>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <div class="user-info">
+                    <div class="user-avatar" id="userAvatar">A</div>
+                    <div>
+                        <div id="userName">Admin Lab</div>
+                        <div id="userEmail">Administrator</div>
+                    </div>
+                </div>
+                <button class="btn btn-danger" id="logoutBtn" style="width: 100%;">
+                    <i class="fas fa-sign-out-alt"></i> <span>Logout</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <!-- Header -->
+            <div class="header">
+                <h1><i class="fas fa-laptop-medical"></i> <span id="page-title">Dashboard Lab Komputer</span></h1>
+                <div class="header-controls">
+                    <div id="current-date" style="color: var(--primary-dark); font-weight: 600; font-size: 0.95rem;"></div>
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="globalSearch" placeholder="Cari data...">
+                    </div>
+                    <button class="btn btn-info" id="notifBtn"><i class="fas fa-bell"></i> <span class="badge badge-warning" id="notifCount">3</span></button>
+                </div>
+            </div>
+
+            <!-- Content Sections -->
+            <div class="content">
+                <!-- Dashboard Section -->
+                <div id="dashboard" class="content-section active">
+                    <div class="section-header">
+                        <h2><i class="fas fa-tachometer-alt"></i> Dashboard Lab Komputer</h2>
+                        <button class="btn btn-primary" id="refreshDashboard"><i class="fas fa-sync-alt"></i> Refresh Data</button>
+                    </div>
+                    
+                    <!-- Quick Stats -->
+                    <div class="dashboard-cards">
+                        <div class="dashboard-card" data-section="devices">
+                            <div class="card-icon">
+                                <i class="fas fa-desktop"></i>
+                            </div>
+                            <h3><i class="fas fa-desktop"></i> Perangkat Aktif</h3>
+                            <div class="card-value" id="active-devices-count">0</div>
+                            <div style="color: var(--text-dark); font-size: 0.9rem; margin-top: 5px;">
+                                <span>Total: 0 perangkat</span>
+                            </div>
+                        </div>
+                        
+                        <div class="dashboard-card" data-section="borrowings">
+                            <div class="card-icon">
+                                <i class="fas fa-laptop"></i>
+                            </div>
+                            <h3><i class="fas fa-laptop"></i> Peminjaman Hari Ini</h3>
+                            <div class="card-value" id="today-borrowings-count">0</div>
+                            <div style="color: var(--text-dark); font-size: 0.9rem; margin-top: 5px;">
+                                <span>0 sedang dipinjam</span>
+                            </div>
+                        </div>
+                        
+                        <div class="dashboard-card" data-section="users">
+                            <div class="card-icon">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <h3><i class="fas fa-users"></i> Pengguna Terdaftar</h3>
+                            <div class="card-value" id="users-count">0</div>
+                            <div style="color: var(--text-dark); font-size: 0.9rem; margin-top: 5px;">
+                                <span>0 aktif</span>
+                            </div>
+                        </div>
+                        
+                        <div class="dashboard-card" data-section="devices">
+                            <div class="card-icon">
+                                <i class="fas fa-tools"></i>
+                            </div>
+                            <h3><i class="fas fa-tools"></i> Perangkat Rusak</h3>
+                            <div class="card-value" id="broken-devices-count">0</div>
+                            <div style="color: var(--text-dark); font-size: 0.9rem; margin-top: 5px;">
+                                <span>0 sedang diperbaiki</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Activity -->
+                    <div class="section-header" style="margin-top: 40px;">
+                        <h2><i class="fas fa-history"></i> Aktivitas Terbaru</h2>
+                        <button class="btn btn-primary" data-section="borrowings"><i class="fas fa-list"></i> Lihat Semua</button>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table id="recent-borrowings">
+                            <thead>
+                                <tr>
+                                    <th>Nama Peminjam</th>
+                                    <th>Perangkat</th>
+                                    <th>Tanggal Pinjam</th>
+                                    <th>Tanggal Kembali</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recent-borrowings-body">
+                                <!-- Data akan diisi dari Firestore -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Perangkat Section -->
+                <div id="devices" class="content-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-desktop"></i> Manajemen Perangkat Lab</h2>
+                        <button class="btn btn-primary" id="addDeviceBtn"><i class="fas fa-plus"></i> Tambah Perangkat</button>
+                    </div>
+                    
+                    <div class="table-container">
+                        <div style="padding: 20px; border-bottom: 2px solid var(--pastel-pink);">
+                            <div class="search-box" style="max-width: 300px;">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="searchDevices" placeholder="Cari perangkat...">
+                            </div>
+                        </div>
+                        
+                        <table id="devicesTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nama Perangkat</th>
+                                    <th>Jenis</th>
+                                    <th>Spesifikasi</th>
+                                    <th>Status</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="devicesTableBody">
+                                <!-- Data akan diisi dari Firestore -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Pengguna Section -->
+                <div id="users" class="content-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-users"></i> Manajemen Pengguna Lab</h2>
+                        <button class="btn btn-primary" id="addUserBtn"><i class="fas fa-plus"></i> Tambah Pengguna</button>
+                    </div>
+                    
+                    <div style="margin-bottom: 20px; font-weight: 500;" id="totalUsers">Total Pengguna: 0</div>
+                    
+                    <div class="table-container">
+                        <table id="usersTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nama</th>
+                                    <th>Email</th>
+                                    <th>No. Telepon</th>
+                                    <th>Status</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="usersTableBody">
+                                <!-- Data akan diisi dari Firestore -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Peminjaman Section -->
+                <div id="borrowings" class="content-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-laptop"></i> Manajemen Peminjaman Alat</h2>
+                        <button class="btn btn-primary" id="addBorrowingBtn"><i class="fas fa-plus"></i> Tambah Peminjaman</button>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table id="borrowingsTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nama Peminjam</th>
+                                    <th>Perangkat</th>
+                                    <th>Tanggal Pinjam</th>
+                                    <th>Tanggal Kembali</th>
+                                    <th>Status</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="borrowingsTableBody">
+                                <!-- Data akan diisi dari Firestore -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Admin Lab Section -->
+                <div id="admin" class="content-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-user-cog"></i> Dashboard Admin Lab Komputer</h2>
+                        <button class="btn btn-primary" id="refreshAdminData"><i class="fas fa-sync-alt"></i> Refresh</button>
+                    </div>
+                    
+                    <div class="table-container">
+                        <!-- Form Tambah Data Komputer -->
+                        <form id="addComputerForm" style="padding: 20px; border-bottom: 2px solid var(--pastel-pink); background: linear-gradient(135deg, white, var(--pastel-bg));">
+                            <div style="display: flex; gap: 15px; margin-bottom: 15px;">
+                                <div style="flex: 1;">
+                                    <label for="computerId">ID Komputer</label>
+                                    <input type="text" id="computerId" class="form-control" placeholder="ID" required>
+                                </div>
+                                <div style="flex: 2;">
+                                    <label for="computerName">Nama Komputer</label>
+                                    <input type="text" id="computerName" class="form-control" placeholder="Nama Komputer" required>
+                                </div>
+                                <div style="flex: 1;">
+                                    <label for="computerStatus">Status</label>
+                                    <select id="computerStatus" class="form-control" required>
+                                        <option value="Aktif">Aktif</option>
+                                        <option value="Dipinjam">Dipinjam</option>
+                                        <option value="Rusak">Rusak</option>
+                                    </select>
+                                </div>
+                                <div style="flex: 1;">
+                                    <label for="computerBorrower">Nama Peminjam</label>
+                                    <input type="text" id="computerBorrower" class="form-control" placeholder="Nama Peminjam (jika ada)">
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-success"><i class="fas fa-plus"></i> Tambah Data</button>
+                        </form>
+                        
+                        <table id="computersTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Nama Komputer</th>
+                                    <th>Status</th>
+                                    <th>Peminjam</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="computersTableBody">
+                                <!-- Data akan diisi dari Firestore -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Laporan Section -->
+                <div id="reports" class="content-section">
+                    <div class="section-header">
+                        <h2><i class="fas fa-chart-bar"></i> Laporan Lab Komputer</h2>
+                        <button class="btn btn-primary" id="addReportBtn"><i class="fas fa-plus"></i> Tambah Laporan</button>
+                    </div>
+                    
+                    <div class="table-container">
+                        <table id="reportsTable">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Jenis Laporan</th>
+                                    <th>Deskripsi</th>
+                                    <th>Periode</th>
+                                    <th>Tanggal Dibuat</th>
+                                    <th>Status</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reportsTableBody">
+                                <!-- Data akan diisi dari Firestore -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== MODAL-MODAL ===== -->
+    
+    <!-- Modal untuk Perangkat -->
+    <div id="deviceModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="deviceModalTitle">Tambah Perangkat</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="deviceForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="modalDeviceName">Nama Perangkat</label>
+                        <input type="text" id="modalDeviceName" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="modalDeviceType">Jenis Perangkat</label>
+                        <select id="modalDeviceType" class="form-control" required>
+                            <option value="">Pilih Jenis</option>
+                            <option value="Laptop">Laptop</option>
+                            <option value="Desktop">Desktop</option>
+                            <option value="Tablet">Tablet</option>
+                            <option value="Printer">Printer</option>
+                            <option value="Lainnya">Lainnya</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="modalDeviceSpec">Spesifikasi</label>
+                        <textarea id="modalDeviceSpec" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="modalDeviceStatus">Status</label>
+                        <select id="modalDeviceStatus" class="form-control" required>
+                            <option value="available">Tersedia</option>
+                            <option value="borrowed">Dipinjam</option>
+                            <option value="maintenance">Perbaikan</option>
+                        </select>
+                    </div>
+                    <input type="hidden" id="editingDeviceId">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger close-modal">Batal</button>
+                    <button type="submit" class="btn btn-success">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal untuk Pengguna -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="userModalTitle">Tambah Pengguna</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="userForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="modalUserName">Nama Lengkap</label>
+                        <input type="text" id="modalUserName" class="form-control" required placeholder="Masukkan nama lengkap">
+                    </div>
+                    <div class="form-group">
+                        <label for="modalUserEmail">Email</label>
+                        <input type="email" id="modalUserEmail" class="form-control" required placeholder="Masukkan email">
+                    </div>
+                    <div class="form-group">
+                        <label for="modalUserPhone">No. Telepon</label>
+                        <input type="tel" id="modalUserPhone" class="form-control" required placeholder="Masukkan nomor telepon">
+                    </div>
+                    <div class="form-group">
+                        <label for="modalUserStatus">Status</label>
+                        <select id="modalUserStatus" class="form-control" required>
+                            <option value="active">Aktif</option>
+                            <option value="inactive">Nonaktif</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger close-modal">Batal</button>
+                    <button type="submit" class="btn btn-success">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal untuk Peminjaman -->
+    <div id="borrowingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="borrowingModalTitle">Tambah Peminjaman</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="borrowingForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="modalBorrowerName">Nama Peminjam</label>
+                        <input type="text" id="modalBorrowerName" class="form-control" placeholder="Nama..." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="modalDevice">Perangkat</label>
+                        <select id="modalDevice" class="form-control" required>
+                            <option value="">Pilih Perangkat</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 15px;">
+                        <div style="flex: 1;">
+                            <label for="modalBorrowDate">Tanggal Pinjam</label>
+                            <input type="date" id="modalBorrowDate" class="form-control" required>
+                        </div>
+                        <div style="flex: 1;">
+                            <label for="modalReturnDate">Tanggal Kembali</label>
+                            <input type="date" id="modalReturnDate" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="modalBorrowingStatus">Status</label>
+                        <select id="modalBorrowingStatus" class="form-control" required>
+                            <option value="Dipinjam">Dipinjam</option>
+                            <option value="Dikembalikan">Dikembalikan</option>
+                        </select>
+                    </div>
+                    <input type="hidden" id="editingBorrowingId">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger close-modal">Batal</button>
+                    <button type="submit" class="btn btn-success">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal untuk Laporan -->
+    <div id="reportModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="reportModalTitle">Tambah Laporan</h3>
+                <span class="close">&times;</span>
+            </div>
+            <form id="reportForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="modalReportType">Jenis Laporan</label>
+                        <input type="text" id="modalReportType" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="modalReportDescription">Deskripsi</label>
+                        <textarea id="modalReportDescription" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="modalReportPeriod">Periode</label>
+                        <input type="text" id="modalReportPeriod" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="modalReportStatus">Status Laporan</label>
+                        <select id="modalReportStatus" class="form-control" required>
+                            <option value="Draft">Draft</option>
+                            <option value="Selesai">Selesai</option>
+                            <option value="Dipublikasikan">Dipublikasikan</option>
+                        </select>
+                    </div>
+                    <input type="hidden" id="editingReportId">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger close-modal">Batal</button>
+                    <button type="submit" class="btn btn-success">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // ==================== FIREBASE CONFIGURATION ====================
+        const firebaseConfig = {
+            apiKey: "AIzaSyA4IYtAlpxHMWrrPV3MS0l7-H0fVDVWi6o",
+            authDomain: "sistem-manajemen-lab.firebaseapp.com",
+            projectId: "sistem-manajemen-lab",
+            storageBucket: "sistem-manajemen-lab.firebasestorage.app",
+            messagingSenderId: "448206375002",
+            appId: "1:448206375002:web:16022abae06111d3d67063",
+            measurementId: "G-RQ86JKXXY6"
+        };
+
+        // ==================== INISIALISASI ====================
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Aplikasi dimulai...');
+            
+            // Inisialisasi Firebase
+            try {
+                firebase.initializeApp(firebaseConfig);
+                console.log('✅ Firebase berhasil diinisialisasi');
+            } catch (error) {
+                console.error('❌ Error inisialisasi Firebase:', error);
+                showToast('⚠️ Mode offline: Data hanya tersimpan di browser ini', 'error');
+            }
+            
+            // Dapatkan referensi ke auth dan firestore
+            const auth = firebase.auth();
+            const db = firebase.firestore();
+            
+            // ==================== FUNGSI UTILITY ====================
+            function showToast(message, type = 'success') {
+                const toast = document.getElementById('toast');
+                toast.textContent = message;
+                toast.className = `toast ${type}`;
+                toast.style.display = 'block';
+                
+                setTimeout(() => {
+                    toast.style.display = 'none';
+                }, 3000);
+            }
+            
+            function formatDate(date) {
+                const d = new Date(date);
+                return d.toLocaleDateString('id-ID', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                });
+            }
+            
+            // ==================== SETUP TANGGAL ====================
+            const currentDate = new Date();
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            document.getElementById('current-date').textContent = currentDate.toLocaleDateString('id-ID', options);
+            
+            // ==================== FUNGSI LOGIN ====================
+            document.getElementById('loginForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const loginError = document.getElementById('loginError');
+                
+                console.log('Mencoba login dengan:', email);
+                
+                try {
+                    // Coba login
+                    const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                    console.log('✅ Login berhasil:', userCredential.user.email);
+                    
+                    // Update UI
+                    loginError.style.display = 'none';
+                    document.getElementById('login-page').style.display = 'none';
+                    document.querySelector('.main-app').style.display = 'block';
+                    
+                    // Update info pengguna
+                    const user = userCredential.user;
+                    document.getElementById('userName').textContent = user.displayName || user.email.split('@')[0];
+                    document.getElementById('userEmail').textContent = user.email;
+                    document.getElementById('userAvatar').textContent = user.displayName ? 
+                        user.displayName.charAt(0).toUpperCase() : 
+                        user.email.charAt(0).toUpperCase();
+                    
+                    // Inisialisasi aplikasi
+                    initializeApp();
+                    showToast('Login berhasil!');
+                    
+                } catch (error) {
+                    console.error('❌ Error login:', error.code, error.message);
+                    
+                    // Jika user tidak ditemukan, buat user baru
+                    if (error.code === 'auth/user-not-found') {
+                        console.log('Membuat user baru...');
+                        try {
+                            const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                            console.log('✅ User baru dibuat:', userCredential.user.email);
+                            
+                            // Update profile
+                            await userCredential.user.updateProfile({
+                                displayName: email.split('@')[0]
+                            });
+                            
+                            // Tambahkan user ke Firestore
+                            try {
+                                await db.collection('users').doc(userCredential.user.uid).set({
+                                    name: email.split('@')[0],
+                                    email: email,
+                                    role: 'admin',
+                                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                                });
+                            } catch (dbError) {
+                                console.log('⚠️ Gagal menyimpan user ke Firestore:', dbError);
+                            }
+                            
+                            // Update UI
+                            loginError.style.display = 'none';
+                            document.getElementById('login-page').style.display = 'none';
+                            document.querySelector('.main-app').style.display = 'block';
+                            
+                            // Update info pengguna
+                            const user = userCredential.user;
+                            document.getElementById('userName').textContent = user.displayName || user.email.split('@')[0];
+                            document.getElementById('userEmail').textContent = user.email;
+                            document.getElementById('userAvatar').textContent = user.displayName ? 
+                                user.displayName.charAt(0).toUpperCase() : 
+                                user.email.charAt(0).toUpperCase();
+                            
+                            // Inisialisasi aplikasi
+                            initializeApp();
+                            showToast('Akun baru berhasil dibuat!');
+                            
+                        } catch (signUpError) {
+                            console.error('❌ Error membuat user baru:', signUpError);
+                            loginError.textContent = 'Error: ' + signUpError.message;
+                            loginError.style.display = 'block';
+                        }
+                    } else {
+                        loginError.textContent = 'Email atau password salah!';
+                        loginError.style.display = 'block';
+                    }
+                }
+            });
+            
+            // ==================== FUNGSI LOGOUT ====================
+            document.getElementById('logoutBtn').addEventListener('click', function() {
+                if (confirm('Apakah Anda yakin ingin logout?')) {
+                    auth.signOut().then(() => {
+                        console.log('✅ Logout berhasil');
+                        document.getElementById('login-page').style.display = 'flex';
+                        document.querySelector('.main-app').style.display = 'none';
+                        document.getElementById('loginForm').reset();
+                        showToast('Logout berhasil');
+                    }).catch((error) => {
+                        console.error('❌ Error logout:', error);
+                    });
+                }
+            });
+            
+            // ==================== FUNGSI INISIALISASI APLIKASI ====================
+            async function initializeApp() {
+                console.log('Menginisialisasi aplikasi...');
+                
+                // Setup event listeners
+                setupNavigation();
+                setupModalEvents();
+                setupFormSubmissions();
+                setupCardClickEvents();
+                setupSearchFunctionality();
+                setupReportClickEvents();
+                
+                // Setup refresh dashboard button
+                document.getElementById('refreshDashboard').addEventListener('click', async function() {
+                    await updateDashboardCounts();
+                    showToast('Data dashboard diperbarui!');
+                });
+                
+                // Setup refresh admin button
+                document.getElementById('refreshAdminData').addEventListener('click', async function() {
+                    await loadComputers();
+                    showToast('Data admin diperbarui!');
+                });
+                
+                // Setup notification button
+                document.getElementById('notifBtn').addEventListener('click', function() {
+                    showToast('Fitur notifikasi masih dalam pengembangan!');
+                });
+                
+                // Load semua data dari Firestore
+                await loadInitialData();
+                
+                console.log('✅ Aplikasi siap digunakan');
+            }
+            
+            // ==================== FUNGSI LOAD DATA DARI FIRESTORE ====================
+            async function loadInitialData() {
+                console.log('Memuat data dari Firestore...');
+                
+                // Load data secara paralel
+                await Promise.all([
+                    loadDevices(),
+                    loadUsers(),
+                    loadBorrowings(),
+                    loadComputers(),
+                    loadReports()
+                ]);
+                
+                // Update dashboard counts
+                await updateDashboardCounts();
+                
+                // Load recent borrowings
+                await loadRecentBorrowings();
+                
+                console.log('✅ Semua data berhasil dimuat');
+            }
+            
+            async function loadDevices() {
+                try {
+                    const snapshot = await db.collection('devices').get();
+                    const devicesTableBody = document.getElementById('devicesTableBody');
+                    devicesTableBody.innerHTML = '';
+                    
+                    snapshot.forEach(doc => {
+                        const device = doc.data();
+                        const statusText = device.status === 'available' ? 'Tersedia' : 
+                                         device.status === 'borrowed' ? 'Dipinjam' : 'Perbaikan';
+                        const statusClass = device.status === 'available' ? 'status-available' : 
+                                           device.status === 'borrowed' ? 'status-borrowed' : 'status-maintenance';
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${device.id || doc.id}</td>
+                            <td>${device.name}</td>
+                            <td>${device.type}</td>
+                            <td>${device.spec}</td>
+                            <td><span class="status ${statusClass}">${statusText}</span></td>
+                            <td>
+                                <button class="btn btn-warning btn-sm edit-device" data-id="${doc.id}"><i class="fas fa-edit"></i></button>
+                                <button class="btn btn-danger btn-sm delete-device" data-id="${doc.id}"><i class="fas fa-trash"></i></button>
+                            </td>
+                        `;
+                        devicesTableBody.appendChild(row);
+                    });
+                    
+                    // Setup event listeners untuk edit/delete
+                    setupDeviceTableEvents();
+                    
+                } catch (error) {
+                    console.error('❌ Error loading devices:', error);
+                    showToast('Gagal memuat data perangkat', 'error');
+                }
+            }
+            
+            async function loadUsers() {
+                try {
+                    const snapshot = await db.collection('users').get();
+                    const usersTableBody = document.getElementById('usersTableBody');
+                    const totalUsersEl = document.getElementById('totalUsers');
+                    
+                    usersTableBody.innerHTML = '';
+                    
+                    // Filter hanya user yang bukan admin Firebase (email tidak mengandung '@')
+                    const users = [];
+                    snapshot.forEach(doc => {
+                        const user = doc.data();
+                        if (user.email && user.email.includes('@')) {
+                            users.push({ id: doc.id, ...user });
+                        }
+                    });
+                    
+                    users.forEach(user => {
+                        const statusText = user.status === 'active' ? 'Aktif' : 'Nonaktif';
+                        const statusClass = user.status === 'active' ? 'status-active' : 'status-inactive';
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${user.id}</td>
+                            <td>${user.name}</td>
+                            <td>${user.email}</td>
+                            <td>${user.phone || '-'}</td>
+                            <td><span class="status ${statusClass}">${statusText}</span></td>
+                            <td>
+                                <button class="btn btn-warning btn-sm edit-user" data-id="${user.id}"><i class="fas fa-edit"></i></button>
+                                <button class="btn btn-danger btn-sm delete-user" data-id="${user.id}"><i class="fas fa-trash"></i></button>
+                            </td>
+                        `;
+                        usersTableBody.appendChild(row);
+                    });
+                    
+                    totalUsersEl.textContent = `Total Pengguna: ${users.length}`;
+                    
+                    // Setup event listeners
+                    setupUserTableEvents();
+                    
+                } catch (error) {
+                    console.error('❌ Error loading users:', error);
+                    showToast('Gagal memuat data pengguna', 'error');
+                }
+            }
+            
+            async function loadBorrowings() {
+                try {
+                    const snapshot = await db.collection('borrowings').get();
+                    const borrowingsTableBody = document.getElementById('borrowingsTableBody');
+                    
+                    borrowingsTableBody.innerHTML = '';
+                    
+                    snapshot.forEach(doc => {
+                        const borrowing = doc.data();
+                        const statusClass = borrowing.status === 'Dipinjam' ? 'status-borrowed' : 'status-active';
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${borrowing.id || doc.id}</td>
+                            <td>${borrowing.borrowerName}</td>
+                            <td>${borrowing.deviceName}</td>
+                            <td>${formatDate(borrowing.borrowDate)}</td>
+                            <td>${formatDate(borrowing.returnDate)}</td>
+                            <td><span class="status ${statusClass}">${borrowing.status}</span></td>
+                            <td>
+                                <button class="btn btn-warning btn-sm edit-borrowing" data-id="${doc.id}"><i class="fas fa-edit"></i></button>
+                                <button class="btn btn-danger btn-sm delete-borrowing" data-id="${doc.id}"><i class="fas fa-trash"></i></button>
+                            </td>
+                        `;
+                        borrowingsTableBody.appendChild(row);
+                    });
+                    
+                    // Setup event listeners
+                    setupBorrowingTableEvents();
+                    
+                } catch (error) {
+                    console.error('❌ Error loading borrowings:', error);
+                    showToast('Gagal memuat data peminjaman', 'error');
+                }
+            }
+            
+            async function loadRecentBorrowings() {
+                try {
+                    const snapshot = await db.collection('borrowings')
+                        .orderBy('borrowDate', 'desc')
+                        .limit(3)
+                        .get();
+                    
+                    const recentBorrowingsBody = document.getElementById('recent-borrowings-body');
+                    recentBorrowingsBody.innerHTML = '';
+                    
+                    snapshot.forEach(doc => {
+                        const borrowing = doc.data();
+                        const statusClass = borrowing.status === 'Dipinjam' ? 'status-borrowed' : 'status-active';
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${borrowing.borrowerName}</td>
+                            <td>${borrowing.deviceName}</td>
+                            <td>${formatDate(borrowing.borrowDate)}</td>
+                            <td>${formatDate(borrowing.returnDate)}</td>
+                            <td><span class="status ${statusClass}">${borrowing.status}</span></td>
+                        `;
+                        recentBorrowingsBody.appendChild(row);
+                    });
+                    
+                } catch (error) {
+                    console.error('❌ Error loading recent borrowings:', error);
+                }
+            }
+            
+            async function loadComputers() {
+                try {
+                    const snapshot = await db.collection('computers').get();
+                    const computersTableBody = document.getElementById('computersTableBody');
+                    
+                    computersTableBody.innerHTML = '';
+                    
+                    snapshot.forEach(doc => {
+                        const computer = doc.data();
+                        
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${computer.id || doc.id}</td>
+                            <td>${computer.name}</td>
+                            <td>${computer.status}</td>
+                            <td>${computer.borrower || '-'}</td>
+                            <td>
+                                <button class="btn btn-success btn-sm edit-computer" data-id="${doc.id}">Edit</button>
+                                <button class="btn btn-danger btn-sm delete-computer" data-id="${doc.id}">Hapus</button>
+                            </td>
+                        `;
+                        computersTableBody.appendChild(row);
+                    });
+                    
+                    // Setup event listeners
+                    setupComputerTableEvents();
+                    
+                } catch (error) {
+                    console.error('❌ Error loading computers:', error);
+                    showToast('Gagal memuat data komputer', 'error');
+                }
+            }
+            
+            async function loadReports() {
+                try {
+                    const snapshot = await db.collection('reports').get();
+                    const reportsTableBody = document.getElementById('reportsTableBody');
+                    
+                    reportsTableBody.innerHTML = '';
+                    
+                    snapshot.forEach(doc => {
+                        const report = doc.data();
+                        const statusClass = report.status === 'Selesai' ? 'status-active' : 
+                                           report.status === 'Dipublikasikan' ? 'status-available' : 'status-inactive';
+                        
+                        const row = document.createElement('tr');
+                        row.className = 'clickable-row';
+                        row.setAttribute('data-id', doc.id);
+                        row.innerHTML = `
+                            <td>${report.id || doc.id}</td>
+                            <td>${report.type}</td>
+                            <td>${report.description}</td>
+                            <td>${report.period}</td>
+                            <td>${formatDate(report.dateCreated)}</td>
+                            <td><span class="status ${statusClass}">${report.status}</span></td>
+                            <td>
+                                <button class="btn btn-info btn-sm view-report" data-id="${doc.id}"><i class="fas fa-eye"></i></button>
+                                <button class="btn btn-warning btn-sm edit-report" data-id="${doc.id}"><i class="fas fa-edit"></i></button>
+                                <button class="btn btn-danger btn-sm delete-report" data-id="${doc.id}"><i class="fas fa-trash"></i></button>
+                            </td>
+                        `;
+                        reportsTableBody.appendChild(row);
+                    });
+                    
+                    // Setup event listeners
+                    setupReportTableEvents();
+                    
+                } catch (error) {
+                    console.error('❌ Error loading reports:', error);
+                    showToast('Gagal memuat data laporan', 'error');
+                }
+            }
+            
+            async function updateDashboardCounts() {
+                try {
+                    // Hitung perangkat aktif
+                    const devicesSnapshot = await db.collection('devices').get();
+                    const activeDevices = devicesSnapshot.docs.filter(doc => 
+                        doc.data().status === 'available'
+                    ).length;
+                    
+                    const brokenDevices = devicesSnapshot.docs.filter(doc => 
+                        doc.data().status === 'maintenance'
+                    ).length;
+                    
+                    document.getElementById('active-devices-count').textContent = activeDevices;
+                    document.getElementById('broken-devices-count').textContent = brokenDevices;
+                    
+                    // Hitung total perangkat
+                    document.querySelector('#dashboard .dashboard-card:nth-child(1) div:nth-child(4) span').textContent = 
+                        `Total: ${devicesSnapshot.size} perangkat`;
+                    
+                    // Hitung pengguna
+                    const usersSnapshot = await db.collection('users').get();
+                    const activeUsers = usersSnapshot.docs.filter(doc => 
+                        doc.data().status === 'active'
+                    ).length;
+                    
+                    document.getElementById('users-count').textContent = usersSnapshot.size;
+                    document.querySelector('#dashboard .dashboard-card:nth-child(3) div:nth-child(4) span').textContent = 
+                        `${activeUsers} aktif`;
+                    
+                    // Hitung peminjaman hari ini
+                    const today = new Date().toISOString().split('T')[0];
+                    const borrowingsSnapshot = await db.collection('borrowings')
+                        .where('borrowDate', '==', today)
+                        .get();
+                    
+                    const activeBorrowings = borrowingsSnapshot.docs.filter(doc => 
+                        doc.data().status === 'Dipinjam'
+                    ).length;
+                    
+                    document.getElementById('today-borrowings-count').textContent = borrowingsSnapshot.size;
+                    document.querySelector('#dashboard .dashboard-card:nth-child(2) div:nth-child(4) span').textContent = 
+                        `${activeBorrowings} sedang dipinjam`;
+                    
+                } catch (error) {
+                    console.error('❌ Error updating dashboard counts:', error);
+                }
+            }
+            
+            // ==================== SETUP EVENT LISTENERS UNTUK TABEL ====================
+            function setupDeviceTableEvents() {
+                const tbody = document.getElementById('devicesTableBody');
+                
+                tbody.addEventListener('click', async function(e) {
+                    const target = e.target.closest('button');
+                    if (!target) return;
+                    
+                    const deviceId = target.getAttribute('data-id');
+                    
+                    if (target.classList.contains('edit-device')) {
+                        // Load device data
+                        try {
+                            const doc = await db.collection('devices').doc(deviceId).get();
+                            if (doc.exists) {
+                                const device = doc.data();
+                                
+                                // Open edit modal
+                                document.getElementById('deviceModalTitle').textContent = 'Edit Perangkat';
+                                document.getElementById('modalDeviceName').value = device.name;
+                                document.getElementById('modalDeviceType').value = device.type;
+                                document.getElementById('modalDeviceSpec').value = device.spec || '';
+                                document.getElementById('modalDeviceStatus').value = device.status;
+                                document.getElementById('editingDeviceId').value = deviceId;
+                                document.getElementById('deviceModal').classList.add('active');
+                            }
+                        } catch (error) {
+                            console.error('Error loading device:', error);
+                            showToast('Gagal memuat data perangkat', 'error');
+                        }
+                    } else if (target.classList.contains('delete-device')) {
+                        if (confirm('Yakin ingin menghapus perangkat ini?')) {
+                            try {
+                                await db.collection('devices').doc(deviceId).delete();
+                                await loadDevices();
+                                await updateDashboardCounts();
+                                showToast('Perangkat berhasil dihapus!');
+                            } catch (error) {
+                                console.error('Error deleting device:', error);
+                                showToast('Gagal menghapus perangkat', 'error');
+                            }
+                        }
+                    }
+                });
+            }
+            
+            function setupUserTableEvents() {
+                const tbody = document.getElementById('usersTableBody');
+                
+                tbody.addEventListener('click', async function(e) {
+                    const target = e.target.closest('button');
+                    if (!target) return;
+                    
+                    const userId = target.getAttribute('data-id');
+                    
+                    if (target.classList.contains('edit-user')) {
+                        try {
+                            const doc = await db.collection('users').doc(userId).get();
+                            if (doc.exists) {
+                                const user = doc.data();
+                                
+                                document.getElementById('userModalTitle').textContent = 'Edit Pengguna';
+                                document.getElementById('modalUserName').value = user.name;
+                                document.getElementById('modalUserEmail').value = user.email;
+                                document.getElementById('modalUserPhone').value = user.phone || '';
+                                document.getElementById('modalUserStatus').value = user.status || 'active';
+                                document.getElementById('userModal').classList.add('active');
+                                
+                                // Simpan ID untuk edit
+                                const submitBtn = document.querySelector('#userForm button[type="submit"]');
+                                submitBtn.setAttribute('data-editing-id', userId);
+                            }
+                        } catch (error) {
+                            console.error('Error loading user:', error);
+                            showToast('Gagal memuat data pengguna', 'error');
+                        }
+                    } else if (target.classList.contains('delete-user')) {
+                        if (confirm('Yakin ingin menghapus pengguna ini?')) {
+                            try {
+                                await db.collection('users').doc(userId).delete();
+                                await loadUsers();
+                                await updateDashboardCounts();
+                                showToast('Pengguna berhasil dihapus!');
+                            } catch (error) {
+                                console.error('Error deleting user:', error);
+                                showToast('Gagal menghapus pengguna', 'error');
+                            }
+                        }
+                    }
+                });
+            }
+            
+            function setupBorrowingTableEvents() {
+                const tbody = document.getElementById('borrowingsTableBody');
+                
+                tbody.addEventListener('click', async function(e) {
+                    const target = e.target.closest('button');
+                    if (!target) return;
+                    
+                    const borrowingId = target.getAttribute('data-id');
+                    
+                    if (target.classList.contains('edit-borrowing')) {
+                        try {
+                            const doc = await db.collection('borrowings').doc(borrowingId).get();
+                            if (doc.exists) {
+                                const borrowing = doc.data();
+                                
+                                document.getElementById('borrowingModalTitle').textContent = 'Edit Peminjaman';
+                                document.getElementById('modalBorrowerName').value = borrowing.borrowerName;
+                                document.getElementById('modalBorrowDate').value = borrowing.borrowDate;
+                                document.getElementById('modalReturnDate').value = borrowing.returnDate;
+                                document.getElementById('modalBorrowingStatus').value = borrowing.status;
+                                document.getElementById('editingBorrowingId').value = borrowingId;
+                                
+                                // Populate device dropdown
+                                const deviceSelect = document.getElementById('modalDevice');
+                                deviceSelect.innerHTML = '<option value="">Pilih Perangkat</option>';
+                                
+                                const devicesSnapshot = await db.collection('devices').get();
+                                devicesSnapshot.forEach(doc => {
+                                    const device = doc.data();
+                                    const option = document.createElement('option');
+                                    option.value = doc.id;
+                                    option.textContent = `${device.name} (${device.id || doc.id})`;
+                                    if (deviceId === borrowing.deviceId) {
+                                        option.selected = true;
+                                    }
+                                    deviceSelect.appendChild(option);
+                                });
+                                
+                                document.getElementById('borrowingModal').classList.add('active');
+                            }
+                        } catch (error) {
+                            console.error('Error loading borrowing:', error);
+                            showToast('Gagal memuat data peminjaman', 'error');
+                        }
+                    } else if (target.classList.contains('delete-borrowing')) {
+                        if (confirm('Yakin ingin menghapus data peminjaman ini?')) {
+                            try {
+                                // Jika status "Dipinjam", set device status back to available
+                                const doc = await db.collection('borrowings').doc(borrowingId).get();
+                                if (doc.exists && doc.data().status === 'Dipinjam') {
+                                    const deviceId = doc.data().deviceId;
+                                    await db.collection('devices').doc(deviceId).update({
+                                        status: 'available'
+                                    });
+                                }
+                                
+                                await db.collection('borrowings').doc(borrowingId).delete();
+                                await loadBorrowings();
+                                await loadDevices();
+                                await updateDashboardCounts();
+                                await loadRecentBorrowings();
+                                showToast('Peminjaman berhasil dihapus!');
+                            } catch (error) {
+                                console.error('Error deleting borrowing:', error);
+                                showToast('Gagal menghapus peminjaman', 'error');
+                            }
+                        }
+                    }
+                });
+            }
+            
+            function setupComputerTableEvents() {
+                const tbody = document.getElementById('computersTableBody');
+                
+                tbody.addEventListener('click', async function(e) {
+                    const target = e.target.closest('button');
+                    if (!target) return;
+                    
+                    const computerId = target.getAttribute('data-id');
+                    
+                    if (target.classList.contains('edit-computer')) {
+                        const row = target.closest('tr');
+                        const cells = row.querySelectorAll('td');
+                        
+                        if (target.textContent === 'Edit') {
+                            // Switch to edit mode
+                            cells[1].innerHTML = `<input type="text" value="${cells[1].textContent}" class="form-control" style="padding: 5px; font-size: 0.9rem;">`;
+                            cells[2].innerHTML = `<select class="form-control" style="padding: 5px; font-size: 0.9rem;">
+                                <option value="Aktif" ${cells[2].textContent === 'Aktif' ? 'selected' : ''}>Aktif</option>
+                                <option value="Dipinjam" ${cells[2].textContent === 'Dipinjam' ? 'selected' : ''}>Dipinjam</option>
+                                <option value="Rusak" ${cells[2].textContent === 'Rusak' ? 'selected' : ''}>Rusak</option>
+                            </select>`;
+                            cells[3].innerHTML = `<input type="text" value="${cells[3].textContent}" class="form-control" style="padding: 5px; font-size: 0.9rem;">`;
+                            
+                            target.textContent = 'Simpan';
+                            target.classList.remove('btn-success');
+                            target.classList.add('btn-primary');
+                        } else {
+                            // Save changes
+                            const nameInput = cells[1].querySelector('input');
+                            const statusSelect = cells[2].querySelector('select');
+                            const borrowerInput = cells[3].querySelector('input');
+                            
+                            if (nameInput && statusSelect && borrowerInput) {
+                                try {
+                                    await db.collection('computers').doc(computerId).update({
+                                        name: nameInput.value,
+                                        status: statusSelect.value,
+                                        borrower: borrowerInput.value
+                                    });
+                                    
+                                    cells[1].textContent = nameInput.value;
+                                    cells[2].textContent = statusSelect.value;
+                                    cells[3].textContent = borrowerInput.value;
+                                    
+                                    target.textContent = 'Edit';
+                                    target.classList.remove('btn-primary');
+                                    target.classList.add('btn-success');
+                                    
+                                    showToast('Data komputer berhasil diperbarui!');
+                                } catch (error) {
+                                    console.error('Error updating computer:', error);
+                                    showToast('Gagal memperbarui data komputer', 'error');
+                                }
+                            }
+                        }
+                    } else if (target.classList.contains('delete-computer')) {
+                        if (confirm('Apakah Anda yakin ingin menghapus data ini?')) {
+                            try {
+                                await db.collection('computers').doc(computerId).delete();
+                                await loadComputers();
+                                await updateDashboardCounts();
+                                showToast('Data komputer berhasil dihapus!');
+                            } catch (error) {
+                                console.error('Error deleting computer:', error);
+                                showToast('Gagal menghapus data komputer', 'error');
+                            }
+                        }
+                    }
+                });
+            }
+            
+            function setupReportTableEvents() {
+                const tbody = document.getElementById('reportsTableBody');
+                
+                tbody.addEventListener('click', async function(e) {
+                    const target = e.target.closest('button');
+                    if (!target) return;
+                    
+                    const reportId = target.getAttribute('data-id');
+                    
+                    if (target.classList.contains('view-report')) {
+                        try {
+                            const doc = await db.collection('reports').doc(reportId).get();
+                            if (doc.exists) {
+                                const report = doc.data();
+                                
+                                document.getElementById('reportModalTitle').textContent = 'Detail Laporan';
+                                document.getElementById('modalReportType').value = report.type;
+                                document.getElementById('modalReportDescription').value = report.description;
+                                document.getElementById('modalReportPeriod').value = report.period;
+                                document.getElementById('modalReportStatus').value = report.status;
+                                document.getElementById('editingReportId').value = reportId;
+                                
+                                // Make fields read-only
+                                document.getElementById('modalReportType').readOnly = true;
+                                document.getElementById('modalReportDescription').readOnly = true;
+                                document.getElementById('modalReportPeriod').readOnly = true;
+                                document.getElementById('modalReportStatus').disabled = true;
+                                
+                                // Change submit button to "Tutup"
+                                const submitBtn = document.querySelector('#reportForm .btn-success');
+                                submitBtn.textContent = 'Tutup';
+                                submitBtn.type = 'button';
+                                submitBtn.onclick = function() {
+                                    closeAllModals();
+                                };
+                                
+                                document.getElementById('reportModal').classList.add('active');
+                            }
+                        } catch (error) {
+                            console.error('Error loading report:', error);
+                            showToast('Gagal memuat data laporan', 'error');
+                        }
+                    } else if (target.classList.contains('edit-report')) {
+                        try {
+                            const doc = await db.collection('reports').doc(reportId).get();
+                            if (doc.exists) {
+                                const report = doc.data();
+                                
+                                document.getElementById('reportModalTitle').textContent = 'Edit Laporan';
+                                document.getElementById('modalReportType').value = report.type;
+                                document.getElementById('modalReportDescription').value = report.description;
+                                document.getElementById('modalReportPeriod').value = report.period;
+                                document.getElementById('modalReportStatus').value = report.status;
+                                document.getElementById('editingReportId').value = reportId;
+                                
+                                // Make fields editable
+                                document.getElementById('modalReportType').readOnly = false;
+                                document.getElementById('modalReportDescription').readOnly = false;
+                                document.getElementById('modalReportPeriod').readOnly = false;
+                                document.getElementById('modalReportStatus').disabled = false;
+                                
+                                // Change submit button back to "Simpan"
+                                const submitBtn = document.querySelector('#reportForm .btn-success');
+                                submitBtn.textContent = 'Simpan';
+                                submitBtn.type = 'submit';
+                                
+                                document.getElementById('reportModal').classList.add('active');
+                            }
+                        } catch (error) {
+                            console.error('Error loading report:', error);
+                            showToast('Gagal memuat data laporan', 'error');
+                        }
+                    } else if (target.classList.contains('delete-report')) {
+                        if (confirm('Yakin ingin menghapus laporan ini?')) {
+                            try {
+                                await db.collection('reports').doc(reportId).delete();
+                                await loadReports();
+                                showToast('Laporan berhasil dihapus!');
+                            } catch (error) {
+                                console.error('Error deleting report:', error);
+                                showToast('Gagal menghapus laporan', 'error');
+                            }
+                        }
+                    }
+                });
+            }
+            
+            // ==================== FUNGSI NAVIGASI ====================
+            function setupNavigation() {
+                const navLinks = document.querySelectorAll('.sidebar nav a');
+                const pageTitle = document.getElementById('page-title');
+                const sectionTitles = {
+                    'dashboard': 'Dashboard Lab Komputer',
+                    'devices': 'Manajemen Perangkat Lab',
+                    'users': 'Manajemen Pengguna Lab',
+                    'borrowings': 'Manajemen Peminjaman Alat',
+                    'admin': 'Dashboard Admin Lab Komputer',
+                    'reports': 'Laporan Lab Komputer'
+                };
+                
+                navLinks.forEach(link => {
+                    link.addEventListener('click', async function(e) {
+                        e.preventDefault();
+                        
+                        // Update active nav link
+                        navLinks.forEach(navLink => navLink.classList.remove('active'));
+                        this.classList.add('active');
+                        
+                        // Get section to show
+                        const sectionId = this.getAttribute('data-section');
+                        
+                        // Update page title
+                        pageTitle.textContent = sectionTitles[sectionId] || 'Lab Manager';
+                        
+                        // Show selected section
+                        showSection(sectionId);
+                        
+                        // Load data if needed
+                        if (sectionId === 'devices') {
+                            await loadDevices();
+                        } else if (sectionId === 'users') {
+                            await loadUsers();
+                        } else if (sectionId === 'borrowings') {
+                            await loadBorrowings();
+                        } else if (sectionId === 'admin') {
+                            await loadComputers();
+                        } else if (sectionId === 'reports') {
+                            await loadReports();
+                        }
+                    });
+                });
+            }
+            
+            function showSection(sectionId) {
+                // Hide all sections
+                const sections = document.querySelectorAll('.content-section');
+                sections.forEach(section => {
+                    section.classList.remove('active');
+                });
+                
+                // Show selected section
+                const activeSection = document.getElementById(sectionId);
+                if (activeSection) {
+                    activeSection.classList.add('active');
+                }
+            }
+            
+            // ==================== FUNGSI MODAL ====================
+            function setupModalEvents() {
+                // Modal open buttons
+                document.getElementById('addDeviceBtn').addEventListener('click', () => {
+                    openDeviceModal('add');
+                });
+                
+                document.getElementById('addUserBtn').addEventListener('click', () => {
+                    openUserModal('add');
+                });
+                
+                document.getElementById('addBorrowingBtn').addEventListener('click', async () => {
+                    await openBorrowingModal('add');
+                });
+                
+                document.getElementById('addReportBtn').addEventListener('click', () => {
+                    openReportModal('add');
+                });
+                
+                // Modal close buttons
+                const closeButtons = document.querySelectorAll('.close, .close-modal');
+                closeButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        closeAllModals();
+                    });
+                });
+                
+                // Close modal when clicking outside
+                window.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('modal')) {
+                        closeAllModals();
+                    }
+                });
+            }
+            
+            function openDeviceModal(action) {
+                if (action === 'add') {
+                    document.getElementById('deviceModalTitle').textContent = 'Tambah Perangkat';
+                    document.getElementById('deviceForm').reset();
+                    document.getElementById('editingDeviceId').value = '';
+                }
+                document.getElementById('deviceModal').classList.add('active');
+            }
+            
+            function openUserModal(action) {
+                if (action === 'add') {
+                    document.getElementById('userModalTitle').textContent = 'Tambah Pengguna';
+                    document.getElementById('userForm').reset();
+                    const submitBtn = document.querySelector('#userForm button[type="submit"]');
+                    submitBtn.removeAttribute('data-editing-id');
+                }
+                document.getElementById('userModal').classList.add('active');
+            }
+            
+            async function openBorrowingModal(action) {
+                if (action === 'add') {
+                    document.getElementById('borrowingModalTitle').textContent = 'Tambah Peminjaman';
+                    document.getElementById('borrowingForm').reset();
+                    document.getElementById('editingBorrowingId').value = '';
+                    
+                    // Populate device dropdown
+                    const deviceSelect = document.getElementById('modalDevice');
+                    deviceSelect.innerHTML = '<option value="">Pilih Perangkat</option>';
+                    
+                    try {
+                        const devicesSnapshot = await db.collection('devices').get();
+                        devicesSnapshot.forEach(doc => {
+                            const device = doc.data();
+                            if (device.status === 'available') {
+                                const option = document.createElement('option');
+                                option.value = doc.id;
+                                option.textContent = `${device.name} (${device.id || doc.id})`;
+                                deviceSelect.appendChild(option);
+                            }
+                        });
+                    } catch (error) {
+                        console.error('Error loading devices for dropdown:', error);
+                    }
+                    
+                    // Set default dates
+                    const today = new Date().toISOString().split('T')[0];
+                    const tomorrow = new Date();
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    
+                    document.getElementById('modalBorrowDate').value = today;
+                    document.getElementById('modalReturnDate').value = tomorrow.toISOString().split('T')[0];
+                }
+                document.getElementById('borrowingModal').classList.add('active');
+            }
+            
+            function openReportModal(action) {
+                if (action === 'add') {
+                    document.getElementById('reportModalTitle').textContent = 'Tambah Laporan';
+                    document.getElementById('reportForm').reset();
+                    document.getElementById('editingReportId').value = '';
+                    
+                    // Set default period to current month
+                    const now = new Date();
+                    const month = now.toLocaleString('id-ID', { month: 'long' });
+                    const year = now.getFullYear();
+                    document.getElementById('modalReportPeriod').value = `${month} ${year}`;
+                }
+                document.getElementById('reportModal').classList.add('active');
+            }
+            
+            function closeAllModals() {
+                const modals = document.querySelectorAll('.modal');
+                modals.forEach(modal => modal.classList.remove('active'));
+                
+                // Reset forms
+                document.getElementById('deviceForm').reset();
+                document.getElementById('userForm').reset();
+                document.getElementById('borrowingForm').reset();
+                document.getElementById('reportForm').reset();
+                
+                // Reset hidden fields
+                document.getElementById('editingDeviceId').value = '';
+                document.getElementById('editingBorrowingId').value = '';
+                document.getElementById('editingReportId').value = '';
+            }
+            
+            // ==================== FUNGSI FORM SUBMISSIONS ====================
+            function setupFormSubmissions() {
+                // Device form
+                document.getElementById('deviceForm').addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const name = document.getElementById('modalDeviceName').value.trim();
+                    const type = document.getElementById('modalDeviceType').value;
+                    const spec = document.getElementById('modalDeviceSpec').value.trim();
+                    const status = document.getElementById('modalDeviceStatus').value;
+                    const editingId = document.getElementById('editingDeviceId').value;
+                    
+                    try {
+                        if (editingId) {
+                            // Edit existing device
+                            await db.collection('devices').doc(editingId).update({
+                                name,
+                                type,
+                                spec,
+                                status,
+                                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                            showToast('Perangkat berhasil diperbarui!');
+                        } else {
+                            // Add new device
+                            const deviceId = 'DEV' + Date.now().toString().slice(-6);
+                            await db.collection('devices').doc(deviceId).set({
+                                id: deviceId,
+                                name,
+                                type,
+                                spec,
+                                status,
+                                dateAdded: new Date().toISOString().split('T')[0],
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                            showToast('Perangkat berhasil ditambahkan!');
+                        }
+                        
+                        // Reload data and close modal
+                        await loadDevices();
+                        await updateDashboardCounts();
+                        closeAllModals();
+                        
+                    } catch (error) {
+                        console.error('Error saving device:', error);
+                        showToast('Gagal menyimpan perangkat', 'error');
+                    }
+                });
+                
+                // User form
+                document.getElementById('userForm').addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const name = document.getElementById('modalUserName').value.trim();
+                    const email = document.getElementById('modalUserEmail').value.trim();
+                    const phone = document.getElementById('modalUserPhone').value.trim();
+                    const status = document.getElementById('modalUserStatus').value;
+                    const editingId = document.querySelector('#userForm button[type="submit"]').getAttribute('data-editing-id');
+                    
+                    try {
+                        if (editingId) {
+                            // Edit existing user
+                            await db.collection('users').doc(editingId).update({
+                                name,
+                                email,
+                                phone,
+                                status,
+                                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                            showToast('Pengguna berhasil diperbarui!');
+                        } else {
+                            // Add new user
+                            const userId = 'USR' + Date.now().toString().slice(-6);
+                            await db.collection('users').doc(userId).set({
+                                id: userId,
+                                name,
+                                email,
+                                phone,
+                                status,
+                                dateRegistered: new Date().toISOString().split('T')[0],
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                            showToast('Pengguna berhasil ditambahkan!');
+                        }
+                        
+                        // Reload data and close modal
+                        await loadUsers();
+                        await updateDashboardCounts();
+                        closeAllModals();
+                        
+                    } catch (error) {
+                        console.error('Error saving user:', error);
+                        showToast('Gagal menyimpan pengguna', 'error');
+                    }
+                });
+                
+                // Borrowing form
+                document.getElementById('borrowingForm').addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const borrowerName = document.getElementById('modalBorrowerName').value.trim();
+                    const deviceId = document.getElementById('modalDevice').value;
+                    const borrowDate = document.getElementById('modalBorrowDate').value;
+                    const returnDate = document.getElementById('modalReturnDate').value;
+                    const status = document.getElementById('modalBorrowingStatus').value;
+                    const editingId = document.getElementById('editingBorrowingId').value;
+                    
+                    try {
+                        // Get device name
+                        let deviceName = '';
+                        if (deviceId) {
+                            const deviceDoc = await db.collection('devices').doc(deviceId).get();
+                            if (deviceDoc.exists) {
+                                deviceName = deviceDoc.data().name;
+                                
+                                // Update device status if borrowed
+                                if (status === 'Dipinjam') {
+                                    await db.collection('devices').doc(deviceId).update({
+                                        status: 'borrowed'
+                                    });
+                                }
+                            }
+                        }
+                        
+                        if (editingId) {
+                            // Edit existing borrowing
+                            await db.collection('borrowings').doc(editingId).update({
+                                borrowerName,
+                                deviceId,
+                                deviceName,
+                                borrowDate,
+                                returnDate,
+                                status,
+                                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                            showToast('Peminjaman berhasil diperbarui!');
+                        } else {
+                            // Add new borrowing
+                            const borrowingId = 'BOR' + Date.now().toString().slice(-6);
+                            await db.collection('borrowings').doc(borrowingId).set({
+                                id: borrowingId,
+                                borrowerName,
+                                deviceId,
+                                deviceName,
+                                borrowDate,
+                                returnDate,
+                                status,
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                            showToast('Peminjaman berhasil ditambahkan!');
+                        }
+                        
+                        // Reload data and close modal
+                        await loadBorrowings();
+                        await loadDevices();
+                        await loadRecentBorrowings();
+                        await updateDashboardCounts();
+                        closeAllModals();
+                        
+                    } catch (error) {
+                        console.error('Error saving borrowing:', error);
+                        showToast('Gagal menyimpan peminjaman', 'error');
+                    }
+                });
+                
+                // Computer form (admin section)
+                document.getElementById('addComputerForm').addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const id = document.getElementById('computerId').value.trim();
+                    const name = document.getElementById('computerName').value.trim();
+                    const status = document.getElementById('computerStatus').value;
+                    const borrower = document.getElementById('computerBorrower').value.trim() || '-';
+                    
+                    if (!id || !name) {
+                        showToast('ID dan Nama Komputer harus diisi!', 'error');
+                        return;
+                    }
+                    
+                    try {
+                        // Check if ID already exists
+                        const existingDoc = await db.collection('computers').doc(id).get();
+                        if (existingDoc.exists) {
+                            showToast('ID komputer sudah ada!', 'error');
+                            return;
+                        }
+                        
+                        await db.collection('computers').doc(id).set({
+                            id,
+                            name,
+                            status,
+                            borrower,
+                            dateAdded: new Date().toISOString().split('T')[0],
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                        
+                        // Reload data and reset form
+                        await loadComputers();
+                        await updateDashboardCounts();
+                        this.reset();
+                        showToast('Data komputer berhasil ditambahkan!');
+                        
+                    } catch (error) {
+                        console.error('Error saving computer:', error);
+                        showToast('Gagal menyimpan data komputer', 'error');
+                    }
+                });
+                
+                // Report form
+                document.getElementById('reportForm').addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    const type = document.getElementById('modalReportType').value.trim();
+                    const description = document.getElementById('modalReportDescription').value.trim();
+                    const period = document.getElementById('modalReportPeriod').value.trim();
+                    const status = document.getElementById('modalReportStatus').value;
+                    const editingId = document.getElementById('editingReportId').value;
+                    
+                    try {
+                        const user = auth.currentUser;
+                        
+                        if (editingId) {
+                            // Edit existing report
+                            await db.collection('reports').doc(editingId).update({
+                                type,
+                                description,
+                                period,
+                                status,
+                                updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                            showToast('Laporan berhasil diperbarui!');
+                        } else {
+                            // Add new report
+                            const reportId = 'REP' + Date.now().toString().slice(-6);
+                            await db.collection('reports').doc(reportId).set({
+                                id: reportId,
+                                type,
+                                description,
+                                period,
+                                status,
+                                dateCreated: new Date().toISOString().split('T')[0],
+                                createdBy: user ? user.email : 'admin',
+                                createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                            });
+                            showToast('Laporan berhasil ditambahkan!');
+                        }
+                        
+                        // Reload data and close modal
+                        await loadReports();
+                        closeAllModals();
+                        
+                    } catch (error) {
+                        console.error('Error saving report:', error);
+                        showToast('Gagal menyimpan laporan', 'error');
+                    }
+                });
+            }
+            
+            // ==================== FUNGSI LAINNYA ====================
+            function setupCardClickEvents() {
+                document.querySelectorAll('.dashboard-card').forEach(card => {
+                    card.addEventListener('click', function() {
+                        const section = this.getAttribute('data-section');
+                        if (section) {
+                            // Update navigation
+                            document.querySelectorAll('.sidebar nav a').forEach(link => {
+                                link.classList.remove('active');
+                                if (link.getAttribute('data-section') === section) {
+                                    link.classList.add('active');
+                                }
+                            });
+                            
+                            // Show the section
+                            showSection(section);
+                            
+                            // Update page title
+                            const sectionTitles = {
+                                'dashboard': 'Dashboard Lab Komputer',
+                                'devices': 'Manajemen Perangkat Lab',
+                                'users': 'Manajemen Pengguna Lab',
+                                'borrowings': 'Manajemen Peminjaman Alat',
+                                'admin': 'Dashboard Admin Lab Komputer',
+                                'reports': 'Laporan Lab Komputer'
+                            };
+                            document.getElementById('page-title').textContent = sectionTitles[section] || 'Lab Manager';
+                        }
+                    });
+                });
+            }
+            
+            function setupSearchFunctionality() {
+                // Device search
+                const searchDevicesInput = document.getElementById('searchDevices');
+                if (searchDevicesInput) {
+                    searchDevicesInput.addEventListener('input', function(e) {
+                        const searchTerm = e.target.value.toLowerCase();
+                        const rows = document.querySelectorAll('#devicesTable tbody tr');
+                        
+                        rows.forEach(row => {
+                            const text = row.textContent.toLowerCase();
+                            row.style.display = text.includes(searchTerm) ? '' : 'none';
+                        });
+                    });
+                }
+                
+                // Global search
+                const globalSearchInput = document.getElementById('globalSearch');
+                if (globalSearchInput) {
+                    globalSearchInput.addEventListener('input', function(e) {
+                        const searchTerm = e.target.value.toLowerCase();
+                        const sections = ['devices', 'users', 'borrowings', 'admin', 'reports'];
+                        
+                        sections.forEach(section => {
+                            const rows = document.querySelectorAll(`#${section}Table tbody tr`);
+                            rows.forEach(row => {
+                                const text = row.textContent.toLowerCase();
+                                row.style.display = text.includes(searchTerm) ? '' : 'none';
+                            });
+                        });
+                    });
+                }
+            }
+            
+            function setupReportClickEvents() {
+                // Already handled in setupReportTableEvents
+            }
+            
+            console.log('✅ Aplikasi siap. Tampilkan halaman login...');
+        });
+    </script>
+</body>
+</html>
